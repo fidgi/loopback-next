@@ -56,9 +56,14 @@ function getConfigFile(name, defaultName) {
 
 /**
  * Resolve the path of the cli command
- * @param {string} cli
+ * @param {string} cli CLI module path
+ * @param {boolean} resolveFromProjectFirst Try to resolve the CLI path from the
+ * package dependencies of the current project first instead of `@loopback/build`
  */
-function resolveCLI(cli) {
+function resolveCLI(cli, resolveFromProjectFirst = true) {
+  if (resolveFromProjectFirst === false) {
+    return require.resolve(cli);
+  }
   const modulePath = './node_modules/' + cli;
   try {
     return require.resolve(path.join(getPackageDir(), modulePath));
@@ -77,7 +82,7 @@ function resolveCLI(cli) {
  * to true, the command itself will be returned without running it
  */
 function runCLI(cli, args, options) {
-  cli = resolveCLI(cli);
+  cli = resolveCLI(cli, options && options.resolveFromProjectFirst);
   args = [cli].concat(args);
   debug('%s', args.join(' '));
   // Keep it backward compatible as dryRun

@@ -52,9 +52,29 @@ function run(argv, options) {
     mochaOpts.splice(allowConsoleLogsIx, 1);
   }
 
+  const resolveFromProjectFirstIx = mochaOpts.indexOf('--resolve-from-project');
+  let resolveFromProjectFirst = false;
+  if (resolveFromProjectFirstIx !== -1) {
+    mochaOpts.splice(resolveFromProjectFirstIx, 1);
+    resolveFromProjectFirst = true;
+  }
+
   const args = [...mochaOpts];
 
-  return utils.runCLI('mocha/bin/mocha', args, options);
+  return utils.runCLI('mocha/bin/mocha', args, {
+    // Prefer to use the `mocha` version from `@loopback/build`
+    // For example, `coveralls@3.0.8` installs mocha@5.x at root level and it
+    // does not honor `--config` for `.mocharc.json`. The build hangs as `--exit`
+    // is not passed to `mocha`.
+    //
+    // npm ls mocha
+    // loopback-next@0.1.0
+    // └─┬ coveralls@3.0.8
+    // └─┬ cobertura-parse@1.0.5
+    // └── mocha@5.0.5
+    resolveFromProjectFirst,
+    ...options,
+  });
 }
 
 module.exports = run;
